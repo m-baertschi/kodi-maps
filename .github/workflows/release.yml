@@ -17,47 +17,66 @@ jobs:
       id: addon_info
       shell: bash
       run: |
-        # Extract values with simple grep
-        ADDON_ID=$(grep -o 'id="[^"]*"' addon.xml | cut -d'"' -f2)
-        ADDON_VERSION=$(grep -o 'version="[^"]*"' addon.xml | cut -d'"' -f2)
-        
-        # Debug what we found
+        # Extract addon id from first line with id attribute (should be the addon tag)
+        ADDON_ID=$(grep -o '<addon id="[^"]*"' addon.xml | head -n 1 | cut -d'"' -f2)
         echo "Found ADDON_ID: $ADDON_ID"
+        
+        # Extract addon version from first line with version attribute (should be the addon tag)
+        ADDON_VERSION=$(grep -o '<addon.*version="[^"]*"' addon.xml | head -n 1 | grep -o 'version="[^"]*"' | cut -d'"' -f2)
         echo "Found ADDON_VERSION: $ADDON_VERSION"
         
-        # Set outputs with proper format
-        echo "ADDON_ID=$ADDON_ID" >> $GITHUB_ENV
-        echo "ADDON_VERSION=$ADDON_VERSION" >> $GITHUB_ENV
+        # Export as environment variables without using GITHUB_ENV
+        export ADDON_ID="$ADDON_ID" 
+        export ADDON_VERSION="$ADDON_VERSION"
+        
+        # Create a properties file and read it in the next steps
+        echo "ADDON_ID=$ADDON_ID" > addon_info.properties
+        echo "ADDON_VERSION=$ADDON_VERSION" >> addon_info.properties
       
+    - name: Load addon info
+      run: |
+        source addon_info.properties
+        echo "Using ADDON_ID=$ADDON_ID"
+        echo "Using ADDON_VERSION=$ADDON_VERSION"
+    
     - name: Create release zip
       run: |
+        source addon_info.properties
         mkdir -p ../zip_release
-        cp -r . "../zip_release/${{ env.ADDON_ID }}"
+        cp -r . "../zip_release/$ADDON_ID"
         cd ../zip_release
         find . -name '.git*' -print0 | xargs -0 rm -rf
         find . -name '__pycache__' -print0 | xargs -0 rm -rf
         find . -name '*.pyc' -print0 | xargs -0 rm -rf
         find . -name '.DS_Store' -print0 | xargs -0 rm -rf
-        zip -r "${{ env.ADDON_ID }}-${{ env.ADDON_VERSION }}.zip" "${{ env.ADDON_ID }}"
-        mv "${{ env.ADDON_ID }}-${{ env.ADDON_VERSION }}.zip" ../
+        zip -r "$ADDON_ID-$ADDON_VERSION.zip" "$ADDON_ID"
+        mv "$ADDON_ID-$ADDON_VERSION.zip" ../
         cd ..
         
     - name: Create GitHub Release
       id: create_release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: v${{ env.ADDON_VERSION }}
-        name: Release v${{ env.ADDON_VERSION }}
-        draft: false
-        prerelease: false
-        files: ${{ env.ADDON_ID }}-${{ env.ADDON_VERSION }}.zip
-        body: |
-          Kodi Addon Release v${{ env.ADDON_VERSION }}
-          
-          ## Installation
-          1. Download the zip file
-          2. In Kodi, go to Settings > Add-ons > Install from zip file
-          3. Navigate to the downloaded zip file and select it
-          4. The addon will be installed
+      run: |
+        source addon_info.properties
+        echo "Creating release for version $ADDON_VERSION"
+        
+        # Create the release.json file with release info
+        cat > release.json << EOF
+        {
+          "tag_name": "v$ADDON_VERSION",
+          "name": "Release v$ADDON_VERSION",
+          "body": "Kodi Addon Release v$ADDON_VERSION\n\n## Installation\n1. Download the zip file\n2. In Kodi, go to Settings > Add-ons > Install from zip file\n3. Navigate to the downloaded zip file and select it\n4. The addon will be installed",
+          "draft": false,
+          "prerelease": false
+        }
+        EOF
+        
+        # Create the release using GitHub CLI
+        gh release create "v$ADDON_VERSION" "$ADDON_ID-$ADDON_VERSION.zip" --title "Release v$ADDON_VERSION" --notes-file <(echo "Kodi Addon Release v$ADDON_VERSION
+
+## Installation
+1. Download the zip file
+2. In Kodi, go to Settings > Add-ons > Install from zip file
+3. Navigate to the downloaded zip file and select it
+4. The addon will be installed")
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
