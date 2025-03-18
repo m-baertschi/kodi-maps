@@ -63,15 +63,13 @@ jobs:
         echo "Creating release v$ADDON_VERSION for addon $ADDON_ID"
         
         # Create release notes file
-        cat > release_notes.md << EOF
-Kodi Addon Release v$ADDON_VERSION
-
-## Installation
-1. Download the zip file
-2. In Kodi, go to Settings > Add-ons > Install from zip file
-3. Navigate to the downloaded zip file and select it
-4. The addon will be installed
-EOF
+        echo "Kodi Addon Release v$ADDON_VERSION" > release_notes.md
+        echo "" >> release_notes.md
+        echo "## Installation" >> release_notes.md
+        echo "1. Download the zip file" >> release_notes.md
+        echo "2. In Kodi, go to Settings > Add-ons > Install from zip file" >> release_notes.md
+        echo "3. Navigate to the downloaded zip file and select it" >> release_notes.md
+        echo "4. The addon will be installed" >> release_notes.md
         
         # Create the release using GitHub CLI
         gh release create "v$ADDON_VERSION" "$ADDON_ID-$ADDON_VERSION.zip" --title "Release v$ADDON_VERSION" --notes-file release_notes.md
