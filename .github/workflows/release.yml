@@ -20,8 +20,8 @@ jobs:
         ADDON_VERSION=$(grep -oP '(?<=version=")[^"]*' addon.xml)
         echo "ADDON_ID=$ADDON_ID" >> $GITHUB_ENV
         echo "ADDON_VERSION=$ADDON_VERSION" >> $GITHUB_ENV
-        echo "addon_id=$ADDON_ID" >> $GITHUB_OUTPUT
-        echo "addon_version=$ADDON_VERSION" >> $GITHUB_OUTPUT
+        echo "addon_id=${ADDON_ID}" >> $GITHUB_OUTPUT
+        echo "addon_version=${ADDON_VERSION}" >> $GITHUB_OUTPUT
       
     - name: Create release zip
       run: |
@@ -40,13 +40,13 @@ jobs:
       id: create_release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: v${{ steps.addon_info.outputs.addon_version }}
-        name: Release v${{ steps.addon_info.outputs.addon_version }}
+        tag_name: v${{ env.ADDON_VERSION }}
+        name: Release v${{ env.ADDON_VERSION }}
         draft: false
         prerelease: false
-        files: ${{ steps.addon_info.outputs.addon_id }}-${{ steps.addon_info.outputs.addon_version }}.zip
+        files: ${{ env.ADDON_ID }}-${{ env.ADDON_VERSION }}.zip
         body: |
-          Kodi Addon Release v${{ steps.addon_info.outputs.addon_version }}
+          Kodi Addon Release v${{ env.ADDON_VERSION }}
           
           ## Installation
           1. Download the zip file
