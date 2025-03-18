@@ -1,0 +1,5 @@
+v0.1.0 (2025-03-18)
+- Initial release
+- View Google Maps in roadmap, satellite, hybrid, and terrain modes
+- Search for locations
+- Settings to customize default view

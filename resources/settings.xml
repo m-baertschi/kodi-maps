@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+    <setting id="api_key" type="text" label="Google Maps API Key" default=""/>
+    <setting id="default_location" type="text" label="Default Location (lat,lng)" default="40.7128,-74.0060"/>
+    <setting id="default_zoom" type="slider" label="Default Zoom Level" default="12" range="1,1,20" option="int"/>
+    <setting id="default_map_type" type="enum" label="Default Map Type" values="Roadmap|Satellite|Hybrid|Terrain" default="0"/>
+</settings>
