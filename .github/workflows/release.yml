@@ -15,13 +15,19 @@ jobs:
       
     - name: Get addon info
       id: addon_info
+      shell: bash
       run: |
-        ADDON_ID=$(grep -oP '(?<=id=")[^"]*' addon.xml)
-        ADDON_VERSION=$(grep -oP '(?<=version=")[^"]*' addon.xml)
+        # Extract values with simple grep
+        ADDON_ID=$(grep -o 'id="[^"]*"' addon.xml | cut -d'"' -f2)
+        ADDON_VERSION=$(grep -o 'version="[^"]*"' addon.xml | cut -d'"' -f2)
+        
+        # Debug what we found
+        echo "Found ADDON_ID: $ADDON_ID"
+        echo "Found ADDON_VERSION: $ADDON_VERSION"
+        
+        # Set outputs with proper format
         echo "ADDON_ID=$ADDON_ID" >> $GITHUB_ENV
         echo "ADDON_VERSION=$ADDON_VERSION" >> $GITHUB_ENV
-        echo "addon_id=${ADDON_ID}" >> $GITHUB_OUTPUT
-        echo "addon_version=${ADDON_VERSION}" >> $GITHUB_OUTPUT
       
     - name: Create release zip
       run: |
