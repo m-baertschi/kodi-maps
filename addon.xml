@@ -2,7 +2,6 @@
 <addon id="plugin.googlemaps" name="Google Maps" version="0.1.0" provider-name="Your Name">
     <requires>
         <import addon="xbmc.python" version="3.0.0"/>
-        <import addon="script.module.web.pil" version="1.1.7"/>
         <import addon="script.module.requests" version="2.22.0"/>
     </requires>
     <extension point="xbmc.python.pluginsource" library="main.py">
@@ -13,7 +12,7 @@
         <description lang="en_GB">View Google Maps within Kodi</description>
         <platform>all</platform>
         <license>MIT</license>
-        <source>https://github.com/yourusername/plugin.googlemaps</source>
+        <source>https://github.com/m-baertschi/kodi-maps</source>
         <assets>
             <icon>resources/icon.png</icon>
             <fanart>resources/fanart.jpg</fanart>

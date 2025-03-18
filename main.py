@@ -11,8 +11,6 @@ import xbmcgui
 import xbmcplugin
 import xbmcvfs
 import requests
-from PIL import Image
-from io import BytesIO
 
 # Get the plugin url in plugin:// notation
 _URL = sys.argv[0]
@@ -64,8 +62,10 @@ def display_map(location=DEFAULT_LOCATION, zoom=DEFAULT_ZOOM, map_type=DEFAULT_M
     
     # Save temporary image
     temp_file = os.path.join(xbmcvfs.translatePath('special://temp'), 'google_map.jpg')
-    image = Image.open(BytesIO(map_data))
-    image.save(temp_file)
+    
+    # Save the map data directly to a file
+    with open(temp_file, 'wb') as f:
+        f.write(map_data)
     
     # Show the image
     xbmc.executebuiltin(f'ShowPicture({temp_file})')

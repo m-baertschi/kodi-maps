@@ -1,0 +1,57 @@
+name: Create Kodi Addon Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Get addon info
+      id: addon_info
+      run: |
+        ADDON_ID=$(grep -oP '(?<=id=")[^"]*' addon.xml)
+        ADDON_VERSION=$(grep -oP '(?<=version=")[^"]*' addon.xml)
+        echo "ADDON_ID=$ADDON_ID" >> $GITHUB_ENV
+        echo "ADDON_VERSION=$ADDON_VERSION" >> $GITHUB_ENV
+        echo "addon_id=$ADDON_ID" >> $GITHUB_OUTPUT
+        echo "addon_version=$ADDON_VERSION" >> $GITHUB_OUTPUT
+      
+    - name: Create release zip
+      run: |
+        mkdir -p ../zip_release
+        cp -r . "../zip_release/${{ env.ADDON_ID }}"
+        cd ../zip_release
+        find . -name '.git*' -print0 | xargs -0 rm -rf
+        find . -name '__pycache__' -print0 | xargs -0 rm -rf
+        find . -name '*.pyc' -print0 | xargs -0 rm -rf
+        find . -name '.DS_Store' -print0 | xargs -0 rm -rf
+        zip -r "${{ env.ADDON_ID }}-${{ env.ADDON_VERSION }}.zip" "${{ env.ADDON_ID }}"
+        mv "${{ env.ADDON_ID }}-${{ env.ADDON_VERSION }}.zip" ../
+        cd ..
+        
+    - name: Create GitHub Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.addon_info.outputs.addon_version }}
+        name: Release v${{ steps.addon_info.outputs.addon_version }}
+        draft: false
+        prerelease: false
+        files: ${{ steps.addon_info.outputs.addon_id }}-${{ steps.addon_info.outputs.addon_version }}.zip
+        body: |
+          Kodi Addon Release v${{ steps.addon_info.outputs.addon_version }}
+          
+          ## Installation
+          1. Download the zip file
+          2. In Kodi, go to Settings > Add-ons > Install from zip file
+          3. Navigate to the downloaded zip file and select it
+          4. The addon will be installed
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
