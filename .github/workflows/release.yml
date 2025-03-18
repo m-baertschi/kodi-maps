@@ -42,16 +42,24 @@ jobs:
     - name: Create release zip
       run: |
         source addon_info.properties
-        mkdir -p ../zip_release
-        cp -r . "../zip_release/$ADDON_ID"
-        cd ../zip_release
-        find . -name '.git*' -print0 | xargs -0 rm -rf
-        find . -name '__pycache__' -print0 | xargs -0 rm -rf
-        find . -name '*.pyc' -print0 | xargs -0 rm -rf
-        find . -name '.DS_Store' -print0 | xargs -0 rm -rf
-        zip -r "$ADDON_ID-$ADDON_VERSION.zip" "$ADDON_ID"
-        mv "$ADDON_ID-$ADDON_VERSION.zip" ../
+        echo "Creating zip for addon $ADDON_ID version $ADDON_VERSION"
+        
+        # Create a clean directory for the addon
+        mkdir -p "zip_release/$ADDON_ID"
+        
+        # Copy all files (excluding git and temp files)
+        cp -r addon.xml main.py README.md changelog.txt bump_version.py resources "zip_release/$ADDON_ID"
+        
+        # Show what we're about to zip
+        ls -la "zip_release/$ADDON_ID"
+        
+        # Create the zip file
+        cd zip_release
+        zip -r "../$ADDON_ID-$ADDON_VERSION.zip" "$ADDON_ID"
         cd ..
+        
+        # Verify the zip was created
+        ls -la "$ADDON_ID-$ADDON_VERSION.zip" || echo "*** ZIP FILE NOT CREATED ***"
         
     - name: Create GitHub Release
       id: create_release
@@ -62,6 +70,15 @@ jobs:
         # Print info about what we're doing
         echo "Creating release v$ADDON_VERSION for addon $ADDON_ID"
         
+        # Check for zip file
+        ZIP_FILE="$ADDON_ID-$ADDON_VERSION.zip"
+        if [ ! -f "$ZIP_FILE" ]; then
+          echo "ERROR: Could not find zip file: $ZIP_FILE"
+          pwd
+          ls -la
+          exit 1
+        fi
+        
         # Create release notes file
         echo "Kodi Addon Release v$ADDON_VERSION" > release_notes.md
         echo "" >> release_notes.md
@@ -71,7 +88,7 @@ jobs:
         echo "3. Navigate to the downloaded zip file and select it" >> release_notes.md
         echo "4. The addon will be installed" >> release_notes.md
         
-        # Create the release using GitHub CLI
-        gh release create "v$ADDON_VERSION" "$ADDON_ID-$ADDON_VERSION.zip" --title "Release v$ADDON_VERSION" --notes-file release_notes.md
+        # Create the release using GitHub CLI with full path to zip file
+        gh release create "v$ADDON_VERSION" "./$ZIP_FILE" --title "Release v$ADDON_VERSION" --notes-file release_notes.md
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
